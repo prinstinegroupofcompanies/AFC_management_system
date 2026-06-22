@@ -108,25 +108,16 @@ npm run dev
 ### Frontend — Vercel
 
 1. Import the GitHub repo on [Vercel](https://vercel.com).
-2. Configure the project (pick **one** setup):
-
-   **Option A — Root Directory = `apps/web` (recommended)**
-   - Root Directory: `apps/web`
-   - Framework Preset: Other (or leave as Vite)
-   - Build Command: `cd ../.. && npm run build -w @agbms/shared && npm run build -w @agbms/web`
+2. **Project Settings → General → Root Directory:** leave empty (repo root `.`).
+3. **Build settings** (auto-loaded from root `vercel.json`):
+   - Build Command: `npm run build:vercel`
    - Output Directory: `dist`
-   - Install Command: `cd ../.. && npm install`
-
-   **Option B — Root Directory = repo root**
-   - Root Directory: leave empty (`.`)
-   - Uses root `vercel.json` automatically
-   - Output Directory: `apps/web/dist`
-
-3. Add environment variable:
+   - Install Command: `npm install`
+4. Add environment variable:
    - `VITE_API_URL` — your Render API URL without a trailing slash (e.g. `https://afc-management-api.onrender.com`)
-4. Deploy and open the site root URL (`/`). The app handles client-side routes via SPA rewrites.
+5. Deploy and open `/`.
 
-> If you see `404: NOT_FOUND`, the Output Directory is wrong. Use `dist` when Root Directory is `apps/web`, or `apps/web/dist` when Root Directory is the repo root.
+> Do **not** set Root Directory to `apps/web`. The build copies `apps/web/dist` to root `dist` for Vercel.
 
 ### Local production-like testing
 
