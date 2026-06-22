@@ -1,9 +1,12 @@
 # Render Blueprint — https://render.com/docs/blueprint-spec
-# Free Render accounts are limited to ONE PostgreSQL database.
-# Reuse an existing database and set DATABASE_URL in the Render dashboard BEFORE deploying.
-# Schema sync runs at service start (not build) when DATABASE_URL is available.
+#
+# DATABASE: Do NOT create a new free Postgres here (Render allows only one).
+# After the web service is created, link your existing database:
+#   Postgres dashboard -> Connect -> afc-management-api
+# Or set DATABASE_URL manually under Environment.
+#
 # After deploy, set CORS_ORIGIN to your Vercel URL(s), comma-separated.
-# Optional: run `npm run db:seed -w @agbms/api` once from the Render Shell.
+# Seed once from Render Shell: npm run db:seed -w @agbms/api
 
 services:
   - type: web
@@ -17,8 +20,6 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: DATABASE_URL
-        sync: false
       - key: JWT_SECRET
         generateValue: true
       - key: REFRESH_TOKEN_SECRET

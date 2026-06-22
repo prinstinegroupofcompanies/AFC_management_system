@@ -1,20 +1,42 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [ -z "${DATABASE_URL:-}" ]; then
+resolve_database_url() {
+  if [ -n "${DATABASE_URL:-}" ]; then
+    printf '%s' "$DATABASE_URL"
+    return 0
+  fi
+
+  for var in INTERNAL_DATABASE_URL POSTGRES_URL POSTGRES_CONNECTION_STRING RENDER_DATABASE_URL; do
+    local value="${!var:-}"
+    if [ -n "$value" ]; then
+      export DATABASE_URL="$value"
+      printf '%s' "$DATABASE_URL"
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+if ! resolve_database_url >/dev/null; then
   echo ""
   echo "============================================================"
-  echo " DEPLOY FAILED: DATABASE_URL is not set on Render"
+  echo " DEPLOY FAILED: No PostgreSQL connection string found"
   echo "============================================================"
   echo ""
-  echo "1. Open Render Dashboard -> your PostgreSQL database"
-  echo "2. Copy the Internal Database URL (or External if required)"
-  echo "3. Open afc-management-api -> Environment"
-  echo "4. Add DATABASE_URL and paste the connection string"
-  echo "5. Save Changes and redeploy"
+  echo "Option A — Link your existing Render Postgres (recommended):"
+  echo "  1. Render Dashboard -> your PostgreSQL database"
+  echo "  2. Click Connect -> select afc-management-api"
+  echo "  3. Save and redeploy"
   echo ""
-  echo "Free Render accounts can only have one Postgres database."
-  echo "Reuse your existing database or use Neon (https://neon.tech)."
+  echo "Option B — Set DATABASE_URL manually:"
+  echo "  1. Render Dashboard -> afc-management-api -> Environment"
+  echo "  2. Add DATABASE_URL = Internal Database URL from Postgres"
+  echo "  3. Save and redeploy"
+  echo ""
+  echo "Option C — Use free external Postgres (Neon):"
+  echo "  https://neon.tech -> create project -> paste connection string as DATABASE_URL"
   echo ""
   exit 1
 fi
