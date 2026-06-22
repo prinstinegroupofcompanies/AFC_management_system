@@ -3,7 +3,6 @@
   "installCommand": "cd ../.. && npm install",
   "buildCommand": "cd ../.. && npm run build -w @agbms/shared && npm run build -w @agbms/web",
   "outputDirectory": "dist",
-  "framework": "vite",
   "rewrites": [
     {
       "source": "/(.*)",
