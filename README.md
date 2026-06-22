@@ -111,13 +111,13 @@ npm run dev
 2. **Project Settings → General → Root Directory:** leave empty (repo root `.`).
 3. **Build settings** (auto-loaded from root `vercel.json`):
    - Build Command: `npm run build:vercel`
-   - Output Directory: `dist`
+   - Output Directory: `build`
    - Install Command: `npm install`
 4. Add environment variable:
    - `VITE_API_URL` — your Render API URL without a trailing slash (e.g. `https://afc-management-api.onrender.com`)
 5. Deploy and open `/`.
 
-> Do **not** set Root Directory to `apps/web`. The build copies `apps/web/dist` to root `dist` for Vercel.
+> Do **not** set Root Directory to `apps/web`. The build copies `apps/web/dist` to root `build` for Vercel (not `dist`, which is gitignored).
 
 ### Local production-like testing
 
