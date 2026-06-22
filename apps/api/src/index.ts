@@ -29,17 +29,29 @@ import airbnbReportRoutes from './modules/airbnb/reports/routes';
 import settingsRoutes from './core/settings/routes';
 import notificationRoutes from './core/notifications/routes';
 import { errorHandler } from './middleware/errorHandler';
-import { getAllowedOrigins, isOriginAllowed } from './lib/cors';
+import { isOriginAllowed } from './lib/cors';
 
 dotenv.config();
 
 const app = express();
+app.set('trust proxy', 1);
+
 const httpServer = createServer(app);
-const allowedOrigins = getAllowedOrigins();
+
+const corsOriginCheck = (
+  origin: string | undefined,
+  callback: (err: Error | null, allow?: boolean) => void
+) => {
+  if (isOriginAllowed(origin)) {
+    callback(null, true);
+    return;
+  }
+  callback(null, false);
+};
 
 const io = new Server(httpServer, {
   cors: {
-    origin: allowedOrigins,
+    origin: corsOriginCheck,
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -49,13 +61,7 @@ app.set('io', io);
 
 app.use(
   cors({
-    origin: (origin, callback) => {
-      if (isOriginAllowed(origin)) {
-        callback(null, true);
-        return;
-      }
-      callback(new Error('Not allowed by CORS'));
-    },
+    origin: corsOriginCheck,
     credentials: true,
   })
 );

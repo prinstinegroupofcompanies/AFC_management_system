@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Eye, EyeOff } from 'lucide-react';
@@ -8,20 +8,31 @@ import { Input } from '@/shared/ui/input';
 import { toast } from '@/shared/ui/toast';
 import { BRAND_LOGOS } from '@/shared/lib/branding';
 import { BrandLogo } from '@/shared/ui/brand-logo';
+import { IS_API_CONFIGURED, IS_PRODUCTION, wakeApiServer } from '@/shared/lib/env';
 
 export function LoginPage() {
-  const [email, setEmail] = useState('admin@atlanticgroup.com');
-  const [password, setPassword] = useState('password123');
+  const [email, setEmail] = useState(import.meta.env.DEV ? 'admin@atlanticgroup.com' : '');
+  const [password, setPassword] = useState(import.meta.env.DEV ? 'password123' : '');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [waking, setWaking] = useState(IS_PRODUCTION && IS_API_CONFIGURED);
   const login = useAuthStore((s) => s.login);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!IS_PRODUCTION || !IS_API_CONFIGURED) {
+      setWaking(false);
+      return;
+    }
+
+    wakeApiServer().finally(() => setWaking(false));
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     try {
-      await login(email, password);
+      await login(email.trim(), password);
       toast.success('Welcome back!');
       navigate('/');
     } catch (err) {
@@ -69,7 +80,19 @@ export function LoginPage() {
           </div>
 
           <h2 className="text-2xl font-bold text-navy-900">Sign in</h2>
-          <p className="mt-1 text-sm text-navy-500">Enter your credentials to access the system</p>
+          <p className="mt-1 text-sm text-navy-500">Enter your email and password to access the system</p>
+
+          {IS_PRODUCTION && !IS_API_CONFIGURED && (
+            <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+              Server connection is not configured. Contact your administrator.
+            </div>
+          )}
+
+          {waking && (
+            <div className="mt-4 rounded-lg border border-navy-200 bg-navy-50 p-3 text-sm text-navy-600">
+              Connecting to server…
+            </div>
+          )}
 
           <form onSubmit={handleSubmit} className="mt-8 space-y-5">
             <Input
@@ -101,18 +124,20 @@ export function LoginPage() {
               </button>
             </div>
 
-            <Button type="submit" className="w-full" size="lg" loading={loading}>
+            <Button type="submit" className="w-full" size="lg" loading={loading} disabled={waking || (IS_PRODUCTION && !IS_API_CONFIGURED)}>
               Sign In
             </Button>
           </form>
 
+          {import.meta.env.DEV && (
           <div className="mt-6 rounded-lg bg-navy-50 p-4 text-xs text-navy-500">
-            <p className="font-medium text-navy-700 mb-1">Demo Accounts</p>
+            <p className="font-medium text-navy-700 mb-1">Demo Accounts (development only)</p>
             <p>admin@atlanticgroup.com · manager@atlanticgroup.com</p>
             <p>sales@atlanticgroup.com · receptionist@atlanticgroup.com</p>
             <p>guest@atlanticgroup.com · inventory@atlanticgroup.com</p>
             <p className="mt-1">Password: password123</p>
           </div>
+          )}
         </motion.div>
       </div>
     </div>

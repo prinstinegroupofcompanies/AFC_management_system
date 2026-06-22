@@ -1,5 +1,27 @@
 import { API_BASE } from './env';
 
+const REQUEST_TIMEOUT_MS = 90000;
+
+function networkErrorMessage(): string {
+  return 'Unable to reach the server. Check your mobile data or Wi‑Fi connection (Orange, Lonestar, or Wi‑Fi) and try again.';
+}
+
+async function fetchWithTimeout(url: string, options: RequestInit = {}): Promise<Response> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+
+  try {
+    return await fetch(url, { ...options, signal: controller.signal });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw new Error('The server is taking too long to respond. Please wait a moment and try again.');
+    }
+    throw new Error(networkErrorMessage());
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 class ApiClient {
   private getToken(): string | null {
     return localStorage.getItem('accessToken');
@@ -22,7 +44,7 @@ class ApiClient {
       headers['Content-Type'] = 'application/json';
     }
 
-    const response = await fetch(`${API_BASE}${endpoint}`, {
+    const response = await fetchWithTimeout(`${API_BASE}${endpoint}`, {
       ...options,
       headers,
     });
@@ -31,7 +53,7 @@ class ApiClient {
       const refreshed = await this.tryRefresh();
       if (refreshed) {
         headers['Authorization'] = `Bearer ${this.getToken()}`;
-        const retry = await fetch(`${API_BASE}${endpoint}`, { ...options, headers });
+        const retry = await fetchWithTimeout(`${API_BASE}${endpoint}`, { ...options, headers });
         if (!retry.ok) {
           const err = await retry.json().catch(() => ({ error: 'Request failed' }));
           throw new Error(err.error || 'Request failed');
@@ -61,7 +83,7 @@ class ApiClient {
     if (!refreshToken) return false;
 
     try {
-      const res = await fetch(`${API_BASE}/auth/refresh`, {
+      const res = await fetchWithTimeout(`${API_BASE}/auth/refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ refreshToken }),

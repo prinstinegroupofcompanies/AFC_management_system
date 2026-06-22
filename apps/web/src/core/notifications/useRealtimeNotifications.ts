@@ -15,7 +15,13 @@ export function useRealtimeNotifications() {
 
     fetchNotifications();
 
-    const socket = io(SOCKET_URL, { path: '/socket.io', transports: ['websocket', 'polling'] });
+    const socket = io(SOCKET_URL, {
+      path: '/socket.io',
+      transports: ['polling', 'websocket'],
+      reconnection: true,
+      reconnectionAttempts: 10,
+      timeout: 30000,
+    });
     socketRef.current = socket;
 
     socket.on('notification:new', (notification: Notification) => {

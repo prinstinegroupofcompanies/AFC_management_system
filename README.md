@@ -119,6 +119,27 @@ npm run dev
 
 > Do **not** set Root Directory to `apps/web`. The build copies `apps/web/dist` to root `build` for Vercel (not `dist`, which is gitignored).
 
+### Production checklist (login on Orange, Lonestar, Wi‑Fi)
+
+Before users sign in, confirm:
+
+| Platform | Variable | Example |
+|----------|----------|---------|
+| **Vercel** | `VITE_API_URL` | `https://afc-management-api.onrender.com` |
+| **Render** | `DATABASE_URL` | PostgreSQL connection string |
+| **Render** | `CORS_ORIGIN` | `https://your-app.vercel.app` (optional — `*.vercel.app` is allowed automatically) |
+| **Render** | `JWT_SECRET` | Long random string |
+| **Render** | `REFRESH_TOKEN_SECRET` | Long random string |
+
+**Seed production users once** (Render Shell):
+```bash
+npm run db:seed -w @agbms/api
+```
+
+Users sign in with their assigned email and password. The app works on any mobile network (Orange, Lonestar, or Wi‑Fi) via HTTPS — no local network required.
+
+**Custom domain:** If using a domain other than `*.vercel.app`, add it to `CORS_ORIGIN` on Render (comma-separated).
+
 ### Local production-like testing
 
 ```bash
