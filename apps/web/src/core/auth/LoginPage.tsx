@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Anchor, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useAuthStore } from '@/core/auth/store';
 import { Button } from '@/shared/ui/button';
 import { Input } from '@/shared/ui/input';
 import { toast } from '@/shared/ui/toast';
+import { BRAND_LOGOS } from '@/shared/lib/branding';
+import { BrandLogo } from '@/shared/ui/brand-logo';
 
 export function LoginPage() {
   const [email, setEmail] = useState('admin@atlanticgroup.com');
@@ -33,9 +35,7 @@ export function LoginPage() {
     <div className="flex min-h-screen">
       <div className="hidden lg:flex lg:w-1/2 bg-gradient-to-br from-navy-900 via-navy-800 to-teal-800 p-12 flex-col justify-between">
         <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-500">
-            <Anchor className="h-6 w-6 text-white" />
-          </div>
+          <BrandLogo src={BRAND_LOGOS.default} alt="Atlantic Food Center" size="lg" />
           <span className="text-xl font-bold text-white">Atlantic Group</span>
         </div>
 
@@ -64,9 +64,7 @@ export function LoginPage() {
           className="w-full max-w-md"
         >
           <div className="mb-8 lg:hidden flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-teal-500">
-              <Anchor className="h-6 w-6 text-white" />
-            </div>
+            <BrandLogo src={BRAND_LOGOS.default} alt="Atlantic Food Center" size="md" />
             <span className="text-xl font-bold text-navy-900">Atlantic Group</span>
           </div>
 

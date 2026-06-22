@@ -3,6 +3,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from '@/core/layout/AppShell';
 import { groupNavItems, foodCenterNavItems } from '@/core/layout/navConfig';
 import { stationNavItems, airbnbNavItems } from '@/core/layout/stationNav';
+import { BRAND_LOGOS, setFavicon } from '@/shared/lib/branding';
 import { GroupDashboard } from '@/modules/group/Dashboard';
 import { SettingsPage } from '@/modules/group/SettingsPage';
 import { FoodCenterDashboard } from '@/modules/food-center/Dashboard';
@@ -28,10 +29,27 @@ import { AirbnbReportsPage } from '@/modules/airbnb/ReportsPage';
 import { useAuthStore } from '@/core/auth/store';
 
 function GroupLayout() {
-  return <AppShell navItems={groupNavItems} sidebarTitle="Atlantic Group" />;
+  useEffect(() => {
+    setFavicon(BRAND_LOGOS.default);
+  }, []);
+
+  return (
+    <AppShell
+      navItems={groupNavItems}
+      sidebarTitle="Atlantic Group"
+      logoSrc={BRAND_LOGOS.default}
+      logoAlt="Atlantic Food Center"
+    />
+  );
 }
 
-function useSubsidiaryLayout(slug: string, title: string, navItems: typeof foodCenterNavItems) {
+function useSubsidiaryLayout(
+  slug: string,
+  title: string,
+  navItems: typeof foodCenterNavItems,
+  logoSrc: string,
+  logoAlt: string
+) {
   const setActiveSubsidiary = useAuthStore((s) => s.setActiveSubsidiary);
   const user = useAuthStore((s) => s.user);
 
@@ -40,19 +58,48 @@ function useSubsidiaryLayout(slug: string, title: string, navItems: typeof foodC
     if (sub) setActiveSubsidiary(sub);
   }, [user, slug, setActiveSubsidiary]);
 
-  return <AppShell navItems={navItems} sidebarTitle={title} />;
+  useEffect(() => {
+    setFavicon(logoSrc);
+  }, [logoSrc]);
+
+  return (
+    <AppShell
+      navItems={navItems}
+      sidebarTitle={title}
+      logoSrc={logoSrc}
+      logoAlt={logoAlt}
+    />
+  );
 }
 
 function FoodCenterLayout() {
-  return useSubsidiaryLayout('food_center', 'Food Center', foodCenterNavItems);
+  return useSubsidiaryLayout(
+    'food_center',
+    'Food Center',
+    foodCenterNavItems,
+    BRAND_LOGOS.foodCenter,
+    'Atlantic Food Center'
+  );
 }
 
 function StationLayout() {
-  return useSubsidiaryLayout('station', 'Atlantic Station', stationNavItems);
+  return useSubsidiaryLayout(
+    'station',
+    'Atlantic Station',
+    stationNavItems,
+    BRAND_LOGOS.station,
+    'Atlantic Station'
+  );
 }
 
 function AirbnbLayout() {
-  return useSubsidiaryLayout('airbnb', 'Air BNB', airbnbNavItems);
+  return useSubsidiaryLayout(
+    'airbnb',
+    'Air BNB',
+    airbnbNavItems,
+    BRAND_LOGOS.default,
+    'Atlantic Food Center'
+  );
 }
 
 export function AppRoutes() {

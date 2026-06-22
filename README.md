@@ -6,7 +6,7 @@ Centralized multi-company ERP platform for Atlantic Group subsidiaries.
 
 - **Frontend:** React 18 + Vite + TypeScript + Tailwind CSS + Framer Motion
 - **Backend:** Node.js + Express + TypeScript
-- **Database:** SQLite (dev) / PostgreSQL (prod) via Prisma ORM
+- **Database:** PostgreSQL via Prisma ORM (Docker locally, Render Postgres in production)
 - **Real-time:** Socket.io
 - **Auth:** JWT + Role-Based Access Control
 
@@ -26,7 +26,11 @@ npm install
 ### Database Setup
 
 ```bash
-# Push schema and seed demo data
+# Start PostgreSQL (requires Docker)
+docker compose up -d
+
+# Copy env and push schema + seed demo data
+cp apps/api/.env.example apps/api/.env
 npm run db:push -w @agbms/api
 npm run db:seed -w @agbms/api
 ```
@@ -80,7 +84,47 @@ npm run dev
 - Room inventory (furniture, electronics, toiletries)
 - Occupancy and revenue reports
 
-## PostgreSQL (Production)
+## Deployment
+
+### Backend — Render
+
+1. Push this repo to GitHub and connect it on [Render](https://render.com).
+2. Use **Blueprint** deploy with the root `render.yaml`, or create a **Web Service** manually:
+   - **Build command:** `npm install && npm run build:api:deploy`
+   - **Start command:** `npm run start -w @agbms/api`
+   - **Health check path:** `/api/health`
+3. Add a **PostgreSQL** database and set `DATABASE_URL` (the blueprint wires this automatically).
+4. Set environment variables:
+   - `JWT_SECRET` — long random string
+   - `REFRESH_TOKEN_SECRET` — long random string
+   - `CORS_ORIGIN` — your Vercel URL(s), comma-separated (e.g. `https://your-app.vercel.app,http://localhost:5173`)
+5. After the first deploy, open the **Render Shell** and seed demo data:
+   ```bash
+   npm run db:seed -w @agbms/api
+   ```
+
+### Frontend — Vercel
+
+1. Import the GitHub repo on [Vercel](https://vercel.com).
+2. Set **Root Directory** to `apps/web`.
+3. Add environment variable:
+   - `VITE_API_URL` — your Render API URL without a trailing slash (e.g. `https://afc-management-api.onrender.com`)
+4. Deploy. Vercel uses `apps/web/vercel.json` for build settings and SPA routing.
+
+### Local production-like testing
+
+```bash
+# API
+cp apps/api/.env.example apps/api/.env
+npm run build:api:deploy
+
+# Web (point at local API)
+echo 'VITE_API_URL=http://localhost:3001' > apps/web/.env
+npm run build -w @agbms/web
+npm run preview -w @agbms/web
+```
+
+## PostgreSQL (Local)
 
 Update `apps/api/.env`:
 
@@ -91,10 +135,10 @@ DATABASE_URL="postgresql://agbms:agbms123@localhost:5432/agbms"
 Start PostgreSQL:
 
 ```bash
-docker-compose up -d
+docker compose up -d
 ```
 
-Then run migrations against PostgreSQL.
+Then run `npm run db:push -w @agbms/api` and seed.
 
 ## Project Structure
 

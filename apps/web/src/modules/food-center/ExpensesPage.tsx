@@ -4,6 +4,7 @@ import { Plus, Upload } from 'lucide-react';
 import { PERMISSIONS } from '@agbms/shared';
 import { api } from '@/shared/lib/api';
 import { formatCurrency, formatDate } from '@/shared/lib/utils';
+import { resolveApiAssetUrl } from '@/shared/lib/env';
 import { Button } from '@/shared/ui/button';
 import { Input, Select } from '@/shared/ui/input';
 import { DataTable, Modal } from '@/shared/ui/table';
@@ -101,12 +102,14 @@ export function ExpensesPage() {
               {
                 key: 'receiptUrl',
                 label: 'Receipt',
-                render: (v) =>
-                  v ? (
-                    <a href={v as string} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline text-sm">
+                render: (v) => {
+                  const href = resolveApiAssetUrl(v as string);
+                  return href ? (
+                    <a href={href} target="_blank" rel="noopener noreferrer" className="text-teal-600 hover:underline text-sm">
                       View
                     </a>
-                  ) : '—',
+                  ) : '—';
+                },
               },
             ]}
           />

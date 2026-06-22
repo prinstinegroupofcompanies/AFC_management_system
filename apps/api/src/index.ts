@@ -29,15 +29,19 @@ import airbnbReportRoutes from './modules/airbnb/reports/routes';
 import settingsRoutes from './core/settings/routes';
 import notificationRoutes from './core/notifications/routes';
 import { errorHandler } from './middleware/errorHandler';
+import { getAllowedOrigins, isOriginAllowed } from './lib/cors';
 
 dotenv.config();
 
 const app = express();
 const httpServer = createServer(app);
+const allowedOrigins = getAllowedOrigins();
+
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+    origin: allowedOrigins,
     methods: ['GET', 'POST'],
+    credentials: true,
   },
 });
 
@@ -45,7 +49,13 @@ app.set('io', io);
 
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:5173',
+    origin: (origin, callback) => {
+      if (isOriginAllowed(origin)) {
+        callback(null, true);
+        return;
+      }
+      callback(new Error('Not allowed by CORS'));
+    },
     credentials: true,
   })
 );
@@ -90,8 +100,8 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 3001;
-httpServer.listen(PORT, () => {
-  console.log(`AGBMS API running on http://localhost:${PORT}`);
+httpServer.listen(Number(PORT), '0.0.0.0', () => {
+  console.log(`AGBMS API running on port ${PORT}`);
 });
 
 export { io };

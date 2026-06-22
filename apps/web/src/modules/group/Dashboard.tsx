@@ -12,8 +12,10 @@ import {
 import { api } from '@/shared/lib/api';
 import { formatCurrency } from '@/shared/lib/utils';
 import { KpiCard } from '@/shared/ui/card';
+import { BrandLogo } from '@/shared/ui/brand-logo';
 import { useAuthStore } from '@/core/auth/store';
 import { subsidiaryConfig } from '@/core/layout/navConfig';
+import { BRAND_LOGOS, getSubsidiaryLogo } from '@/shared/lib/branding';
 import type { SubsidiarySlug } from '@agbms/shared';
 
 interface DashboardData {
@@ -83,9 +85,12 @@ export function GroupDashboard() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-navy-900">Atlantic Group Dashboard</h1>
-        <p className="text-sm text-navy-500">Overview of all subsidiaries and operations</p>
+      <div className="flex items-center gap-4">
+        <BrandLogo src={BRAND_LOGOS.default} alt="Atlantic Food Center" size="lg" />
+        <div>
+          <h1 className="text-2xl font-bold text-navy-900">Atlantic Group Dashboard</h1>
+          <p className="text-sm text-navy-500">Overview of all subsidiaries and operations</p>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -140,8 +145,13 @@ export function GroupDashboard() {
                 <div className={`absolute inset-0 bg-gradient-to-br ${config?.color || 'from-navy-500 to-navy-700'} opacity-5`} />
                 <div className="relative">
                   <div className="flex items-start justify-between">
-                    <div className={`rounded-xl bg-gradient-to-br ${config?.color || 'from-navy-500 to-navy-700'} p-3 text-white`}>
-                      {config?.icon}
+                    <div className="rounded-xl bg-white p-2 shadow-sm ring-1 ring-navy-100">
+                      <BrandLogo
+                        src={getSubsidiaryLogo(sub.slug)}
+                        alt={sub.name}
+                        size="md"
+                        className="bg-transparent"
+                      />
                     </div>
                     {!sub.isActive && (
                       <span className="flex items-center gap-1 rounded-full bg-navy-100 px-2.5 py-1 text-xs font-medium text-navy-600">

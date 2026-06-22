@@ -6,7 +6,10 @@ import { LoginPage } from '@/core/auth/LoginPage';
 import { ProtectedRoute } from '@/core/auth/ProtectedRoute';
 import { AppRoutes } from '@/core/router/routes';
 import { useAuthStore } from '@/core/auth/store';
+import { BRAND_LOGOS, setFavicon } from '@/shared/lib/branding';
 import './index.css';
+
+setFavicon(BRAND_LOGOS.default);
 
 const queryClient = new QueryClient({
   defaultOptions: {

@@ -10,9 +10,11 @@ interface AppShellProps {
   navItems: NavItem[];
   title?: string;
   sidebarTitle?: string;
+  logoSrc: string;
+  logoAlt?: string;
 }
 
-export function AppShell({ navItems, title, sidebarTitle }: AppShellProps) {
+export function AppShell({ navItems, title, sidebarTitle, logoSrc, logoAlt }: AppShellProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
   const location = useLocation();
@@ -26,13 +28,15 @@ export function AppShell({ navItems, title, sidebarTitle }: AppShellProps) {
         collapsed={collapsed}
         onToggleCollapse={() => setCollapsed(!collapsed)}
         title={sidebarTitle}
+        logoSrc={logoSrc}
+        logoAlt={logoAlt}
       />
 
       <div
         className="transition-all duration-300"
         style={{ marginLeft: typeof window !== 'undefined' && window.innerWidth >= 1024 ? (collapsed ? 64 : 256) : 0 }}
       >
-        <TopBar onMenuClick={() => setSidebarOpen(true)} title={title} />
+        <TopBar onMenuClick={() => setSidebarOpen(true)} title={title} logoSrc={logoSrc} logoAlt={logoAlt} />
 
         <main className="p-4 lg:p-6">
           <AnimatePresence mode="wait">

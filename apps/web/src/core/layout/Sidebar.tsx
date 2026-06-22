@@ -1,8 +1,9 @@
 import { NavLink } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, ChevronLeft, Anchor } from 'lucide-react';
+import { X, ChevronLeft } from 'lucide-react';
 import { cn } from '@/shared/lib/utils';
 import { useAuthStore } from '@/core/auth/store';
+import { BrandLogo } from '@/shared/ui/brand-logo';
 import type { NavItem } from './navConfig';
 
 interface SidebarProps {
@@ -12,6 +13,8 @@ interface SidebarProps {
   collapsed: boolean;
   onToggleCollapse: () => void;
   title?: string;
+  logoSrc: string;
+  logoAlt?: string;
 }
 
 export function Sidebar({
@@ -21,6 +24,8 @@ export function Sidebar({
   collapsed,
   onToggleCollapse,
   title = 'Atlantic Group',
+  logoSrc,
+  logoAlt = 'Atlantic Food Center',
 }: SidebarProps) {
   const can = useAuthStore((s) => s.can);
 
@@ -31,9 +36,7 @@ export function Sidebar({
   const sidebarContent = (
     <div className="flex h-full flex-col">
       <div className={cn('flex items-center gap-3 border-b border-navy-700/50 px-4 py-5', collapsed && 'justify-center px-2')}>
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-teal-500">
-          <Anchor className="h-5 w-5 text-white" />
-        </div>
+        <BrandLogo src={logoSrc} alt={logoAlt} collapsed={collapsed} />
         {!collapsed && (
           <div className="min-w-0">
             <p className="truncate text-sm font-bold text-white">{title}</p>

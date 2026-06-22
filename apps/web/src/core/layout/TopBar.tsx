@@ -5,13 +5,16 @@ import { cn } from '@/shared/lib/utils';
 import { useAuthStore } from '@/core/auth/store';
 import { NotificationBell } from '@/core/notifications/NotificationBell';
 import { useRealtimeNotifications } from '@/core/notifications/useRealtimeNotifications';
+import { BrandLogo } from '@/shared/ui/brand-logo';
 
 interface TopBarProps {
   onMenuClick: () => void;
   title?: string;
+  logoSrc: string;
+  logoAlt?: string;
 }
 
-export function TopBar({ onMenuClick, title }: TopBarProps) {
+export function TopBar({ onMenuClick, title, logoSrc, logoAlt }: TopBarProps) {
   const { user, logout, activeSubsidiary } = useAuthStore();
   const navigate = useNavigate();
   const [showMenu, setShowMenu] = useState(false);
@@ -30,6 +33,8 @@ export function TopBar({ onMenuClick, title }: TopBarProps) {
       >
         <Menu className="h-5 w-5" />
       </button>
+
+      <BrandLogo src={logoSrc} alt={logoAlt || 'Atlantic Food Center'} size="sm" className="lg:hidden" />
 
       <div className="flex-1">
         {title && (

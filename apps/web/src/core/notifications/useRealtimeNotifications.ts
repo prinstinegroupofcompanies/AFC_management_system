@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useAuthStore } from '@/core/auth/store';
+import { SOCKET_URL } from '@/shared/lib/env';
 import { useNotificationStore, type Notification } from './store';
 
 export function useRealtimeNotifications() {
@@ -14,7 +15,7 @@ export function useRealtimeNotifications() {
 
     fetchNotifications();
 
-    const socket = io('/', { path: '/socket.io', transports: ['websocket', 'polling'] });
+    const socket = io(SOCKET_URL, { path: '/socket.io', transports: ['websocket', 'polling'] });
     socketRef.current = socket;
 
     socket.on('notification:new', (notification: Notification) => {
