@@ -1,18 +1,23 @@
 import { API_BASE } from './env';
 
-const REQUEST_TIMEOUT_MS = 90000;
+const REQUEST_TIMEOUT_MS = 60000;
+const LOGIN_RETRIES = 2;
 
 function networkErrorMessage(): string {
-  return 'Unable to reach the server. Check your mobile data or Wi‑Fi connection (Orange, Lonestar, or Wi‑Fi) and try again.';
+  return 'Unable to reach the server. Check your mobile data or Wi‑Fi (Orange, Lonestar, or Wi‑Fi) and try again.';
 }
 
-async function fetchWithTimeout(url: string, options: RequestInit = {}): Promise<Response> {
+async function fetchWithTimeout(url: string, options: RequestInit = {}, retries = 0): Promise<Response> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
   try {
     return await fetch(url, { ...options, signal: controller.signal });
   } catch (error) {
+    if (retries < LOGIN_RETRIES) {
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      return fetchWithTimeout(url, options, retries + 1);
+    }
     if (error instanceof DOMException && error.name === 'AbortError') {
       throw new Error('The server is taking too long to respond. Please wait a moment and try again.');
     }

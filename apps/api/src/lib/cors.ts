@@ -10,8 +10,8 @@ export function isOriginAllowed(origin?: string): boolean {
 
   if (getAllowedOrigins().includes(origin)) return true;
 
-  // Vercel production and preview deployments
-  if (/^https:\/\/[\w-]+\.vercel\.app$/.test(origin)) return true;
+  // Vercel production, preview, and team deployments
+  if (origin.startsWith('https://') && origin.endsWith('.vercel.app')) return true;
 
   return false;
 }

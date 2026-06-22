@@ -8,24 +8,29 @@ import { Input } from '@/shared/ui/input';
 import { toast } from '@/shared/ui/toast';
 import { BRAND_LOGOS } from '@/shared/lib/branding';
 import { BrandLogo } from '@/shared/ui/brand-logo';
-import { IS_API_CONFIGURED, IS_PRODUCTION, wakeApiServer } from '@/shared/lib/env';
+import {
+  API_URL,
+  checkApiHealth,
+  IS_API_CONFIGURED,
+  IS_PRODUCTION,
+  type ApiHealthStatus,
+} from '@/shared/lib/env';
 
 export function LoginPage() {
   const [email, setEmail] = useState(import.meta.env.DEV ? 'admin@atlanticgroup.com' : '');
   const [password, setPassword] = useState(import.meta.env.DEV ? 'password123' : '');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [waking, setWaking] = useState(IS_PRODUCTION && IS_API_CONFIGURED);
+  const [serverStatus, setServerStatus] = useState<ApiHealthStatus | 'checking'>(
+    IS_PRODUCTION && IS_API_CONFIGURED ? 'checking' : 'ok'
+  );
   const login = useAuthStore((s) => s.login);
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!IS_PRODUCTION || !IS_API_CONFIGURED) {
-      setWaking(false);
-      return;
-    }
+    if (!IS_PRODUCTION || !IS_API_CONFIGURED) return;
 
-    wakeApiServer().finally(() => setWaking(false));
+    checkApiHealth().then(setServerStatus);
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -88,9 +93,22 @@ export function LoginPage() {
             </div>
           )}
 
-          {waking && (
+          {IS_PRODUCTION && IS_API_CONFIGURED && serverStatus === 'checking' && (
             <div className="mt-4 rounded-lg border border-navy-200 bg-navy-50 p-3 text-sm text-navy-600">
-              Connecting to server…
+              Checking server connection…
+            </div>
+          )}
+
+          {IS_PRODUCTION && serverStatus === 'slow' && (
+            <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+              Server is waking up. Sign in may take a few extra seconds on first try.
+            </div>
+          )}
+
+          {IS_PRODUCTION && serverStatus === 'unreachable' && (
+            <div className="mt-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-800">
+              Cannot reach the server right now. Check your connection (Orange, Lonestar, or Wi‑Fi) and try again.
+              {API_URL && <span className="block mt-1 text-xs opacity-80">API: {API_URL}</span>}
             </div>
           )}
 
@@ -103,6 +121,7 @@ export function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@atlanticgroup.com"
               required
+              autoComplete="email"
             />
 
             <div className="relative">
@@ -114,6 +133,7 @@ export function LoginPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
+                autoComplete="current-password"
               />
               <button
                 type="button"
@@ -124,19 +144,25 @@ export function LoginPage() {
               </button>
             </div>
 
-            <Button type="submit" className="w-full" size="lg" loading={loading} disabled={waking || (IS_PRODUCTION && !IS_API_CONFIGURED)}>
+            <Button
+              type="submit"
+              className="w-full"
+              size="lg"
+              loading={loading}
+              disabled={IS_PRODUCTION && !IS_API_CONFIGURED}
+            >
               Sign In
             </Button>
           </form>
 
           {import.meta.env.DEV && (
-          <div className="mt-6 rounded-lg bg-navy-50 p-4 text-xs text-navy-500">
-            <p className="font-medium text-navy-700 mb-1">Demo Accounts (development only)</p>
-            <p>admin@atlanticgroup.com · manager@atlanticgroup.com</p>
-            <p>sales@atlanticgroup.com · receptionist@atlanticgroup.com</p>
-            <p>guest@atlanticgroup.com · inventory@atlanticgroup.com</p>
-            <p className="mt-1">Password: password123</p>
-          </div>
+            <div className="mt-6 rounded-lg bg-navy-50 p-4 text-xs text-navy-500">
+              <p className="font-medium text-navy-700 mb-1">Demo Accounts (development only)</p>
+              <p>admin@atlanticgroup.com · manager@atlanticgroup.com</p>
+              <p>sales@atlanticgroup.com · receptionist@atlanticgroup.com</p>
+              <p>guest@atlanticgroup.com · inventory@atlanticgroup.com</p>
+              <p className="mt-1">Password: password123</p>
+            </div>
           )}
         </motion.div>
       </div>

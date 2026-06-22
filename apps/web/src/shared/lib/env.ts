@@ -1,4 +1,22 @@
-const apiUrl = (import.meta.env.VITE_API_URL as string | undefined)?.replace(/\/$/, '') || '';
+const PRODUCTION_API_DEFAULT = 'https://afc-management-api.onrender.com';
+const WAKE_TIMEOUT_MS = 8000;
+
+declare global {
+  interface Window {
+    __AGBMS_API_URL__?: string;
+  }
+}
+
+function resolveApiUrl(): string {
+  const fromVite = (import.meta.env.VITE_API_URL as string | undefined)?.trim();
+  const fromRuntime =
+    typeof window !== 'undefined' ? window.__AGBMS_API_URL__?.trim() : '';
+  const fallback = import.meta.env.PROD ? PRODUCTION_API_DEFAULT : '';
+
+  return (fromVite || fromRuntime || fallback).replace(/\/$/, '');
+}
+
+const apiUrl = resolveApiUrl();
 
 export const API_URL = apiUrl;
 export const API_BASE = apiUrl ? `${apiUrl}/api` : '/api';
@@ -13,11 +31,26 @@ export function resolveApiAssetUrl(path?: string | null): string | undefined {
   return `${base}${path.startsWith('/') ? path : `/${path}`}`;
 }
 
-export async function wakeApiServer(): Promise<void> {
-  if (!apiUrl) return;
+export type ApiHealthStatus = 'ok' | 'slow' | 'unreachable';
+
+export async function checkApiHealth(): Promise<ApiHealthStatus> {
+  if (!apiUrl) return 'unreachable';
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), WAKE_TIMEOUT_MS);
+  const started = Date.now();
+
   try {
-    await fetch(`${apiUrl}/api/health`, { method: 'GET', cache: 'no-store' });
+    const response = await fetch(`${apiUrl}/api/health`, {
+      method: 'GET',
+      cache: 'no-store',
+      signal: controller.signal,
+    });
+    if (!response.ok) return 'unreachable';
+    return Date.now() - started > 5000 ? 'slow' : 'ok';
   } catch {
-    // Render cold start — login request will retry
+    return 'unreachable';
+  } finally {
+    clearTimeout(timeout);
   }
 }
