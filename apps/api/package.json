@@ -6,7 +6,7 @@
     "dev": "tsx watch src/index.ts",
     "build": "tsc",
     "build:deploy": "prisma generate",
-    "start": "prisma db push && tsx src/index.ts",
+    "start": "bash scripts/render-start.sh",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
