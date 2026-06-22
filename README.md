@@ -89,16 +89,19 @@ npm run dev
 ### Backend — Render
 
 1. Push this repo to GitHub and connect it on [Render](https://render.com).
-2. Use **Blueprint** deploy with the root `render.yaml`, or create a **Web Service** manually:
+2. **Database:** Render free accounts allow only **one** PostgreSQL database. Either:
+   - Reuse your existing Render Postgres — copy its **Internal Database URL** into `DATABASE_URL`, or
+   - Use a free external Postgres (e.g. [Neon](https://neon.tech)) and paste the connection string into `DATABASE_URL`.
+3. Deploy with **Blueprint** (`render.yaml`) or create a **Web Service** manually:
    - **Build command:** `npm install && npm run build:api:deploy`
    - **Start command:** `npm run start -w @agbms/api`
    - **Health check path:** `/api/health`
-3. Add a **PostgreSQL** database and set `DATABASE_URL` (the blueprint wires this automatically).
-4. Set environment variables:
-   - `JWT_SECRET` — long random string
-   - `REFRESH_TOKEN_SECRET` — long random string
+4. Set environment variables in the Render dashboard:
+   - `DATABASE_URL` — PostgreSQL connection string (required; not auto-created by blueprint)
+   - `JWT_SECRET` — long random string (auto-generated if using blueprint)
+   - `REFRESH_TOKEN_SECRET` — long random string (auto-generated if using blueprint)
    - `CORS_ORIGIN` — your Vercel URL(s), comma-separated (e.g. `https://your-app.vercel.app,http://localhost:5173`)
-5. After the first deploy, open the **Render Shell** and seed demo data:
+5. After the first successful deploy, open the **Render Shell** and seed demo data:
    ```bash
    npm run db:seed -w @agbms/api
    ```
