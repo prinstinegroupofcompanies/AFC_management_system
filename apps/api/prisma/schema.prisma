@@ -1,0 +1,491 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Subsidiary {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  description String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  branches            Branch[]
+  users               UserSubsidiary[]
+  vendors             Vendor[]
+  assets              Asset[]
+  accounts            Account[]
+  journalTransactions JournalTransaction[]
+  customers           Customer[]
+  customerInvoices    CustomerInvoice[]
+  bankAccounts        BankAccount[]
+  properties          Property[]
+}
+
+model Role {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  name        String
+  permissions String   // JSON array of permission strings
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users User[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  password     String
+  roleId       String
+  status       String   @default("active") // active, inactive
+  qrCode       String?  @unique
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  role         Role              @relation(fields: [roleId], references: [id])
+  subsidiaries UserSubsidiary[]
+  staffProfile StaffProfile?
+  sales        Sale[]
+  expenses     Expense[]
+  movements    InventoryMovement[] @relation("MovementStaff")
+  approvedMovements InventoryMovement[] @relation("MovementApprover")
+  attendance   AttendanceRecord[]
+  auditLogs    AuditLog[]
+  refreshTokens RefreshToken[]
+}
+
+model UserSubsidiary {
+  id           String @id @default(cuid())
+  userId       String
+  subsidiaryId String
+
+  user       User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subsidiary Subsidiary @relation(fields: [subsidiaryId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, subsidiaryId])
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  token     String   @unique
+  userId    String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model StaffProfile {
+  id         String    @id @default(cuid())
+  userId     String    @unique
+  department String?
+  hireDate   DateTime?
+  phone      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Branch {
+  id           String   @id @default(cuid())
+  name         String
+  address      String?
+  subsidiaryId String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  subsidiary  Subsidiary         @relation(fields: [subsidiaryId], references: [id], onDelete: Cascade)
+  sales       Sale[]
+  expenses    Expense[]
+  inventory   InventoryItem[]
+  assets      Asset[]
+  attendance  AttendanceRecord[]
+}
+
+model Sale {
+  id         String    @id @default(cuid())
+  staffId    String
+  amount     Float
+  date       DateTime
+  branchId   String
+  status     String    @default("pending") // pending, approved, rejected
+  notes      String?
+  approvedBy String?
+  approvedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  staff  User   @relation(fields: [staffId], references: [id])
+  branch Branch @relation(fields: [branchId], references: [id])
+}
+
+model Expense {
+  id          String   @id @default(cuid())
+  category    String
+  amount      Float
+  date        DateTime
+  description String?
+  receiptUrl  String?
+  enteredById String
+  branchId    String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  enteredBy User   @relation(fields: [enteredById], references: [id])
+  branch    Branch @relation(fields: [branchId], references: [id])
+}
+
+model InventoryItem {
+  id           String   @id @default(cuid())
+  productName  String
+  category     String
+  quantity     Int      @default(0)
+  costPrice    Float    @default(0)
+  sellingPrice Float    @default(0)
+  reorderLevel Int      @default(10)
+  branchId     String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  branch    Branch              @relation(fields: [branchId], references: [id])
+  movements InventoryMovement[]
+}
+
+model InventoryMovement {
+  id         String    @id @default(cuid())
+  itemId     String
+  type       String    // in, out, adjustment
+  quantity   Int
+  notes      String?
+  staffId    String?
+  status     String    @default("pending") // pending, approved, rejected
+  approvedBy String?
+  approvedAt DateTime?
+  createdAt  DateTime  @default(now())
+
+  item     InventoryItem @relation(fields: [itemId], references: [id])
+  staff    User?         @relation("MovementStaff", fields: [staffId], references: [id])
+  approver User?         @relation("MovementApprover", fields: [approvedBy], references: [id])
+}
+
+model Vendor {
+  id            String   @id @default(cuid())
+  name          String
+  email         String?
+  phone         String?
+  address       String?
+  goodsSupplied String?
+  subsidiaryId  String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  subsidiary Subsidiary      @relation(fields: [subsidiaryId], references: [id])
+  invoices   VendorInvoice[]
+}
+
+model VendorInvoice {
+  id           String   @id @default(cuid())
+  vendorId     String
+  amount       Float
+  paidAmount   Float    @default(0)
+  status       String   @default("pending") // pending, partial, paid
+  deliveryDate DateTime
+  description  String?
+  fileUrl      String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  vendor   Vendor          @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  payments VendorPayment[]
+}
+
+model VendorPayment {
+  id        String   @id @default(cuid())
+  invoiceId String
+  amount    Float
+  date      DateTime
+  notes     String?
+  createdAt DateTime @default(now())
+
+  invoice VendorInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+model Asset {
+  id           String   @id @default(cuid())
+  name         String
+  category     String
+  value        Float
+  status       String   @default("active") // active, maintenance, retired
+  description  String?
+  branchId     String
+  subsidiaryId String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  branch     Branch     @relation(fields: [branchId], references: [id])
+  subsidiary Subsidiary @relation(fields: [subsidiaryId], references: [id])
+}
+
+model AttendanceRecord {
+  id        String    @id @default(cuid())
+  userId    String
+  branchId  String?
+  checkIn   DateTime
+  checkOut  DateTime?
+  method    String    @default("mobile") // mobile, qr, manual
+  createdAt DateTime  @default(now())
+
+  user   User    @relation(fields: [userId], references: [id])
+  branch Branch? @relation(fields: [branchId], references: [id])
+}
+
+model AccountCategory {
+  id        String   @id @default(cuid())
+  name      String
+  type      String
+  createdAt DateTime @default(now())
+}
+
+model JournalEntry {
+  id          String   @id @default(cuid())
+  description String
+  amount      Float
+  type        String
+  categoryId  String?
+  reference   String?
+  date        DateTime @default(now())
+  createdAt   DateTime @default(now())
+}
+
+// Atlantic Station — Accounting
+model Account {
+  id           String   @id @default(cuid())
+  code         String
+  name         String
+  type         String   // asset, liability, equity, revenue, expense
+  subsidiaryId String
+  balance      Float    @default(0)
+  isActive     Boolean  @default(true)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  subsidiary Subsidiary    @relation(fields: [subsidiaryId], references: [id], onDelete: Cascade)
+  lines      JournalLine[]
+
+  @@unique([code, subsidiaryId])
+}
+
+model JournalTransaction {
+  id           String   @id @default(cuid())
+  date         DateTime
+  description  String
+  reference    String?
+  subsidiaryId String
+  createdAt    DateTime @default(now())
+
+  subsidiary Subsidiary    @relation(fields: [subsidiaryId], references: [id], onDelete: Cascade)
+  lines      JournalLine[]
+}
+
+model JournalLine {
+  id            String  @id @default(cuid())
+  transactionId String
+  accountId     String
+  debit         Float   @default(0)
+  credit        Float   @default(0)
+  description   String?
+
+  transaction JournalTransaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  account     Account            @relation(fields: [accountId], references: [id])
+}
+
+model Customer {
+  id           String   @id @default(cuid())
+  name         String
+  email        String?
+  phone        String?
+  address      String?
+  subsidiaryId String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  subsidiary Subsidiary        @relation(fields: [subsidiaryId], references: [id], onDelete: Cascade)
+  invoices   CustomerInvoice[]
+}
+
+model CustomerInvoice {
+  id           String   @id @default(cuid())
+  customerId   String
+  amount       Float
+  paidAmount   Float    @default(0)
+  status       String   @default("pending") // pending, partial, paid
+  dueDate      DateTime
+  description  String?
+  subsidiaryId String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  customer   Customer          @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  subsidiary Subsidiary        @relation(fields: [subsidiaryId], references: [id], onDelete: Cascade)
+  payments   CustomerPayment[]
+}
+
+model CustomerPayment {
+  id        String   @id @default(cuid())
+  invoiceId String
+  amount    Float
+  date      DateTime
+  method    String?
+  notes     String?
+  createdAt DateTime @default(now())
+
+  invoice CustomerInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+}
+
+model BankAccount {
+  id            String   @id @default(cuid())
+  name          String
+  accountNumber String?
+  balance       Float    @default(0)
+  subsidiaryId  String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  subsidiary Subsidiary @relation(fields: [subsidiaryId], references: [id], onDelete: Cascade)
+}
+
+// Atlantic Air BNB — Hospitality
+model Property {
+  id           String   @id @default(cuid())
+  name         String
+  address      String?
+  subsidiaryId String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  subsidiary Subsidiary @relation(fields: [subsidiaryId], references: [id], onDelete: Cascade)
+  rooms      Room[]
+}
+
+model Room {
+  id         String   @id @default(cuid())
+  number     String
+  type       String   @default("standard") // standard, deluxe, suite
+  rate       Float
+  status     String   @default("available") // available, occupied, maintenance, cleaning
+  capacity   Int      @default(2)
+  beds       Int      @default(1)
+  amenities  String?
+  propertyId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  property     Property           @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  bookings     Booking[]
+  housekeeping HousekeepingTask[]
+  inventory    RoomInventory[]
+
+  @@unique([number, propertyId])
+}
+
+model Guest {
+  id        String   @id @default(cuid())
+  name      String
+  email     String?
+  phone     String?
+  idNumber  String?
+  address   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  bookings Booking[]
+}
+
+model Booking {
+  id          String    @id @default(cuid())
+  guestId     String
+  roomId      String
+  checkIn     DateTime
+  checkOut    DateTime
+  status      String    @default("reserved") // reserved, checked_in, checked_out, cancelled
+  totalAmount Float
+  paidAmount  Float     @default(0)
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  guest    Guest            @relation(fields: [guestId], references: [id])
+  room     Room             @relation(fields: [roomId], references: [id])
+  payments BookingPayment[]
+}
+
+model BookingPayment {
+  id        String   @id @default(cuid())
+  bookingId String
+  amount    Float
+  date      DateTime
+  method    String?
+  receiptNo String?
+  createdAt DateTime @default(now())
+
+  booking Booking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+}
+
+model HousekeepingTask {
+  id            String    @id @default(cuid())
+  roomId        String
+  status        String    @default("pending") // pending, in_progress, completed
+  assignedToId  String?
+  notes         String?
+  scheduledDate DateTime
+  completedAt   DateTime?
+  createdAt     DateTime  @default(now())
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+}
+
+model RoomInventory {
+  id        String   @id @default(cuid())
+  roomId    String
+  itemName  String
+  category  String   // furniture, electronics, toiletries, kitchen
+  quantity  Int      @default(1)
+  condition String   @default("good") // good, fair, needs_replacement
+  createdAt DateTime @default(now())
+
+  room Room @relation(fields: [roomId], references: [id], onDelete: Cascade)
+}
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  userId    String
+  action    String
+  entity    String
+  entityId  String?
+  metadata  String?  // JSON
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Notification {
+  id             String   @id @default(cuid())
+  type           String
+  title          String
+  message        String
+  subsidiarySlug String?
+  entityType     String?
+  entityId       String?
+  userId         String?
+  read           Boolean  @default(false)
+  createdAt      DateTime @default(now())
+}

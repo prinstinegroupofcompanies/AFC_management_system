@@ -1,0 +1,21 @@
+{
+  "name": "afc-management-system",
+  "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently \"npm run dev -w @agbms/api\" \"npm run dev -w @agbms/web\"",
+    "dev:api": "npm run dev -w @agbms/api",
+    "dev:web": "npm run dev -w @agbms/web",
+    "build": "npm run build -w @agbms/shared && npm run build -w @agbms/api && npm run build -w @agbms/web",
+    "db:migrate": "npm run db:migrate -w @agbms/api",
+    "db:seed": "npm run db:seed -w @agbms/api",
+    "db:studio": "npm run db:studio -w @agbms/api"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
