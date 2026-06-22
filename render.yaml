@@ -1,6 +1,7 @@
 # Render Blueprint — https://render.com/docs/blueprint-spec
 # Free Render accounts are limited to ONE PostgreSQL database.
-# Reuse an existing database and set DATABASE_URL manually in the dashboard.
+# Reuse an existing database and set DATABASE_URL in the Render dashboard BEFORE deploying.
+# Schema sync runs at service start (not build) when DATABASE_URL is available.
 # After deploy, set CORS_ORIGIN to your Vercel URL(s), comma-separated.
 # Optional: run `npm run db:seed -w @agbms/api` once from the Render Shell.
 

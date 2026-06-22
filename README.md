@@ -96,8 +96,8 @@ npm run dev
    - **Build command:** `npm install && npm run build:api:deploy`
    - **Start command:** `npm run start -w @agbms/api`
    - **Health check path:** `/api/health`
-4. Set environment variables in the Render dashboard:
-   - `DATABASE_URL` — PostgreSQL connection string (required; not auto-created by blueprint)
+4. Set environment variables in the Render dashboard **before** deploying:
+   - `DATABASE_URL` — PostgreSQL connection string (**required**; schema sync runs at service start)
    - `JWT_SECRET` — long random string (auto-generated if using blueprint)
    - `REFRESH_TOKEN_SECRET` — long random string (auto-generated if using blueprint)
    - `CORS_ORIGIN` — your Vercel URL(s), comma-separated (e.g. `https://your-app.vercel.app,http://localhost:5173`)
